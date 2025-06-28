@@ -1,17 +1,18 @@
+// index.js is the entry point of the React app.
+// It renders the <App /> component into the root HTML element.
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+import 'bootstrap/dist/css/bootstrap.min.css'; // Load Bootstrap styles globally
+
+import ReactDOM from 'react-dom/client';
+import App from './App'; // Main app component
+import './index.css'; // Optional: your global custom styles (can be blank or removed)
+
+const root = ReactDOM.createRoot(document.getElementById('root')); // Get the root div in public/index.html
+
+// Render the entire React app starting from <App />
 root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();

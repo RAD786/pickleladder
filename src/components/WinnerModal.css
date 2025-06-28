@@ -1,0 +1,50 @@
+/* Winner names - bold and larger */
+.winner-name {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #198754; /* Bootstrap success green */
+}
+
+/* Confetti animation (simple emoji based) */
+.confetti-animation {
+  animation: confettiFall 1.5s ease-out infinite alternate;
+  font-size: 1.8rem;
+  margin-top: 10px;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(10px) rotate(10deg);
+    opacity: 0.8;
+  }
+}
+
+/* Optional: Enhance modal header */
+.modal-header {
+  border-bottom: 2px solid #155724;
+}
+
+/* Optional: Improve spacing for modal body text */
+.modal-body {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.modal-content {
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
