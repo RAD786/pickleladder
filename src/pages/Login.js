@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { login } from '../redux/authSlice';
 
 function Login() {
-  // Local state for form inputs and error message
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -10,37 +11,45 @@ function Login() {
 
   const [error, setError] = useState('');
 
-  const navigate = useNavigate(); // Allows redirect after login
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  // Handle changes to form inputs
   function handleChange(e) {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   }
 
-  // Handle form submission
-  function handleSubmit(e) {
-    e.preventDefault(); // Prevent page reload
+  async function handleSubmit(e) {
+    e.preventDefault();
 
-    // Basic client-side validation
     if (!formData.email || !formData.password) {
       setError('Please fill in both fields.');
       return;
     }
 
-    setError(''); // Clear previous errors
+    setError('');
 
-    // TODO: send login request to backend
-    console.log('Logging in with:', formData);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-    // Simulated success response (replace with real backend call)
-    const fakeSuccess = true;
+      const data = await response.json(); // Expects { user: {...}, token: '...' }
 
-    if (fakeSuccess) {
-      // Later: store user token here, maybe using localStorage
-      navigate('/dashboard'); // Redirect to dashboard after successful login
-    } else {
-      setError('Invalid email or password.');
+      if (response.ok) {
+        // Dispatch login action with both user data and token
+        dispatch(login({ user: data.user, token: data.token }));
+        navigate('/dashboard');
+      } else {
+        setError(data.message || 'Invalid email or password.');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An error occurred during login. Please try again.');
     }
   }
 
@@ -51,7 +60,6 @@ function Login() {
       {error && <div className="alert alert-danger">{error}</div>}
 
       <form onSubmit={handleSubmit}>
-        {/* Email Input */}
         <div className="mb-3">
           <label className="form-label" htmlFor="email">Email *</label>
           <input
@@ -65,7 +73,6 @@ function Login() {
           />
         </div>
 
-        {/* Password Input */}
         <div className="mb-3">
           <label className="form-label" htmlFor="password">Password *</label>
           <input
@@ -79,7 +86,6 @@ function Login() {
           />
         </div>
 
-        {/* Submit Button */}
         <button type="submit" className="btn btn-primary">
           LOGIN
         </button>

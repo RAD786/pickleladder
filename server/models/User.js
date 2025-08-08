@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   location: { type: String, required: true },
   rating: { type: String, required: true },
   playPreference: { type: String },
+  image: { type: String }, // ADDED: Define the image field
   isVerified: { type: Boolean, default: false },
 }, { timestamps: true });
 

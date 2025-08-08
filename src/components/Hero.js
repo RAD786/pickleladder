@@ -10,7 +10,7 @@ function Hero() {
   };
 
   return (
-    <div className="hero d-flex align-items-center justify-content-center text-white text-center p-5">
+    <div className="hero d-flex align-items-center justify-content-center text-dark text-center p-5">
       <div>
         <h1 className="display-4">FREE Pickleball Ladder Scoresheet</h1>
         <p className="lead">Easy to use right from your phone</p>

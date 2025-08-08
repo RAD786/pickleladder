@@ -1,5 +1,5 @@
 import { Modal, Button } from 'react-bootstrap';
-import './WinnerModal.css'; // Optional for animation/custom styles
+import './WinnerModal.css';
 import { useNavigate } from 'react-router-dom';
 
 function WinnerModal({ show, winners, handleClose, handleNewMatch }) {

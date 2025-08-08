@@ -72,5 +72,26 @@ input[disabled] {
   background-color: #fff3cd !important; /* Light yellow */
 }
 
+/* Highlighting for Game 4 Teams (using !important and matching home/away colors) */
+.bg-game4-team1 {
+  background-color: #d4edda !important; /* Light green (same as bg-home) */
+  font-weight: bold;
+}
 
+.bg-game4-team2 {
+  background-color: #fff3cd !important; /* Light yellow (same as bg-away) */
+  font-weight: bold;
+}
 
+.table-responsive {
+  overflow-x: auto;
+}
+
+.table td, .table th {
+  font-size: 0.95rem;
+}
+
+.bg-out {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
