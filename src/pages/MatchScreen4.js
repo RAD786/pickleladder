@@ -7,12 +7,12 @@ import MatchupSchedule from "../components/MatchupSchedule";
 import ScoreTable from "../components/ScoreTable";
 
 /**
- * Canonical 4-player schedule (players A–D => 0..3), 3 games:
+ * Canonical 4-player base schedule (players A–D => 0..3), 3 games:
  * G1: A+B (home) vs C+D (away)
  * G2: A+C (home) vs B+D (away)
  * G3: A+D (home) vs B+C (away)
  */
-const SCHEDULE_4P = {
+const BASE_SCHEDULE_4P = {
   home: [
     [0, 1], // G1: A+B
     [0, 2], // G2: A+C
@@ -52,9 +52,19 @@ function MatchScreen4() {
 
   const [players, setPlayers] = useState(["", "", "", ""]);
   const [editingIndex, setEditingIndex] = useState(null);
-  const [scores, setScores] = useState(Array.from({ length: 3 }, () => Array(4).fill(""))); // 3 games × 4 players
+
+  // Schedule is dynamic so we can append Game 4
+  const [schedule, setSchedule] = useState({
+    home: [...BASE_SCHEDULE_4P.home],
+    away: [...BASE_SCHEDULE_4P.away],
+  });
+
+  // Scores mirror schedule length (rows = games, cols = 4 players)
+  const [scores, setScores] = useState(Array.from({ length: 3 }, () => Array(4).fill("")));
+
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState("");
+  const [dismissedSuggestion, setDismissedSuggestion] = useState(false);
 
   const [matchDateTime] = useState(new Date().toLocaleString());
   const playTo = Number(setup.playTo ?? 11);
@@ -63,6 +73,15 @@ function MatchScreen4() {
     const names = (setup.playerNames || []).slice(0, 4);
     setPlayers([...names, ...Array(Math.max(0, 4 - names.length)).fill("")].slice(0, 4));
   }, [setup]);
+
+  // Keep scores array length in sync if schedule changes (e.g., after adding Game 4)
+  useEffect(() => {
+    setScores((prev) => {
+      if (prev.length === schedule.home.length) return prev;
+      // Extend with empty row for new game
+      return [...prev, Array(4).fill("")];
+    });
+  }, [schedule.home.length]);
 
   const handleNameChange = (index, value) => {
     const updated = [...players];
@@ -100,9 +119,9 @@ function MatchScreen4() {
 
   /** Role for a given cell in the schedule: 'home' | 'away' | '' (no 'out' for 4p) */
   const getCellRole = (gameIdx, playerIdx) => {
-    if (gameIdx < 0 || gameIdx >= 3 || playerIdx < 0 || playerIdx >= 4) return "";
-    if (SCHEDULE_4P.home[gameIdx]?.includes(playerIdx)) return "home";
-    if (SCHEDULE_4P.away[gameIdx]?.includes(playerIdx)) return "away";
+    if (gameIdx < 0 || gameIdx >= schedule.home.length || playerIdx < 0 || playerIdx >= 4) return "";
+    if (schedule.home[gameIdx]?.includes(playerIdx)) return "home";
+    if (schedule.away[gameIdx]?.includes(playerIdx)) return "away";
     return "";
   };
 
@@ -121,9 +140,51 @@ function MatchScreen4() {
 
   const isCellActive = () => true; // no 'out' cells for 4-player
 
+  const allFieldsFilledBase3 =
+    scores.length >= 3 && scores.slice(0, 3).every((row) => row.every((v) => v !== ""));
+
   const allFieldsFilled = scores.every((gameScores, gameIdx) =>
     gameScores.every((score, playerIdx) => (isCellActive(gameIdx, playerIdx) ? score !== "" : true))
   );
+
+  // --- Most Competitive Game logic (based on first 3 games only) ---
+  const teamPoints = (g) => {
+    const homePair = schedule.home[g];
+    const awayPair = schedule.away[g];
+    const home =
+      (Number(scores[g][homePair[0]]) || 0) + (Number(scores[g][homePair[1]]) || 0);
+    const away =
+      (Number(scores[g][awayPair[0]]) || 0) + (Number(scores[g][awayPair[1]]) || 0);
+    return { home, away, diff: Math.abs(home - away), total: home + away };
+  };
+
+  const recommendedGame = useMemo(() => {
+    if (!allFieldsFilledBase3 || schedule.home.length > 3 || dismissedSuggestion) return null;
+    const stats = [0, 1, 2].map((g) => ({ g, ...teamPoints(g) }));
+    // Sort by: diff asc, total desc, game desc (prefer later)
+    stats.sort((a, b) => a.diff - b.diff || b.total - a.total || b.g - a.g);
+    return stats[0];
+  }, [allFieldsFilledBase3, schedule.home.length, dismissedSuggestion, scores]);
+
+  const addGame4 = () => {
+    if (!recommendedGame) return;
+    const g = recommendedGame.g;
+    const newHome = schedule.away[g]; // swap sides for freshness
+    const newAway = schedule.home[g];
+
+    setSchedule((s) => ({
+      home: [...s.home, newHome],
+      away: [...s.away, newAway],
+    }));
+  };
+
+  const handleSubmit = () => {
+    if (!allFieldsFilled) {
+      alert("Please fill in all scores before submitting the match.");
+      return;
+    }
+    setShowModal(true);
+  };
 
   const playerTotals = players.map((_, i) =>
     scores.reduce(
@@ -137,14 +198,6 @@ function MatchScreen4() {
     .map((name, idx) => ({ name, score: playerTotals[idx] }))
     .filter((p) => p.name && p.score === maxScore);
 
-  const handleSubmit = () => {
-    if (!allFieldsFilled) {
-      alert("Please fill in all scores before submitting the match.");
-      return;
-    }
-    setShowModal(true);
-  };
-
   return (
     <div className="container my-5">
       <h2>4-Player Scorecard</h2>
@@ -156,7 +209,8 @@ function MatchScreen4() {
         <strong>Play To:</strong> {playTo}
       </div>
 
-      <MatchupSchedule players={players} />
+      {/* Pass schedule so MatchupSchedule can optionally show Game 4 */}
+      <MatchupSchedule players={players} schedule4={schedule} />
 
       {error && <div className="alert alert-danger">{error}</div>}
 
@@ -171,6 +225,28 @@ function MatchScreen4() {
         getCellClass={getCellClass}
       />
 
+      {/* Suggest Game 4 once G1–G3 are complete and before adding it */}
+      {recommendedGame && schedule.home.length === 3 && (
+        <div className="alert alert-secondary mt-3 d-flex justify-content-between align-items-center">
+          <div>
+            <strong>Suggested Game 4:</strong> Replay{" "}
+            <strong>Game {recommendedGame.g + 1}</strong> (diff {recommendedGame.diff}, total{" "}
+            {recommendedGame.total}). Home/Away will be swapped.
+          </div>
+          <div>
+            <button className="btn btn-outline-primary btn-sm me-2" onClick={addGame4}>
+              Add Game 4
+            </button>
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              onClick={() => setDismissedSuggestion(true)}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="text-center mt-4">
         <button className="btn btn-primary" onClick={handleSubmit}>
           Submit Match
@@ -184,7 +260,7 @@ function MatchScreen4() {
         <h5>Instructions:</h5>
         <ul className="mb-0">
           <li>Points are only scored when serving</li>
-          <li>3 games (each player partners with each other once)</li>
+          <li>3 games (each player partners with each other once) + optional Game 4 rematch</li>
           <li>All games must be won by 2 points</li>
           <li>Record each player’s score every game</li>
         </ul>
@@ -195,8 +271,10 @@ function MatchScreen4() {
         winners={winners}
         handleClose={() => setShowModal(false)}
         handleNewMatch={() => {
+          setSchedule({ home: [...BASE_SCHEDULE_4P.home], away: [...BASE_SCHEDULE_4P.away] });
           setScores(Array.from({ length: 3 }, () => Array(4).fill("")));
           setPlayers(["", "", "", ""]);
+          setDismissedSuggestion(false);
           setShowModal(false);
         }}
       />

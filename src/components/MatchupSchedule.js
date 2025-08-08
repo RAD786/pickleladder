@@ -1,11 +1,11 @@
-function MatchupSchedule({ players }) {
+function MatchupSchedule({ players, schedule4 }) {
   if (!players || players.length < 4) return null;
 
   const getName = (idx) => players[idx] || `P${idx + 1}`;
   const isFivePlayer = players.length === 5;
 
-  // Canonical schedules (must match MatchScreen4/5)
-  const schedule4 = {
+  // Canonical fallback schedules (must match MatchScreen4/5)
+  const fallback4 = {
     home: [
       [0, 1], // G1: A+B
       [0, 2], // G2: A+C
@@ -17,6 +17,11 @@ function MatchupSchedule({ players }) {
       [1, 2], // G3: B+C
     ],
   };
+
+  // Use live schedule from MatchScreen4 if provided (shows Game 4 when added)
+  const live4 = schedule4 && Array.isArray(schedule4.home) && Array.isArray(schedule4.away)
+    ? schedule4
+    : fallback4;
 
   const schedule5 = {
     sitOut: [4, 3, 0, 1, 2], // E, D, A, B, C
@@ -74,8 +79,8 @@ function MatchupSchedule({ players }) {
           </>
         ) : (
           <>
-            {schedule4.home.map((pair, g) => (
-              <Row key={g} g={g} home={pair} away={schedule4.away[g]} />
+            {live4.home.map((pair, g) => (
+              <Row key={g} g={g} home={pair} away={live4.away[g]} />
             ))}
           </>
         )}
