@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function MatchModal({ closeModal }) {
-  const [playerCount, setPlayerCount] = useState(4); // Default to 4 players
-  const [playTo, setPlayTo] = useState('11');
+  const [playerCount, setPlayerCount] = useState(4); // Default to 4
+  const [playTo, setPlayTo] = useState('11');       // string from <select>
   const [customPlayTo, setCustomPlayTo] = useState('');
-  const [playerNames, setPlayerNames] = useState(['', '', '', '', '']); // Always keep 5 slots
+  const [playerNames, setPlayerNames] = useState(['', '', '', '', '']); // up to 5
 
   const navigate = useNavigate();
 
-  // Handle name input change
   const handlePlayerChange = (e, i) => {
     const updated = [...playerNames];
     updated[i] = e.target.value;
@@ -19,26 +18,36 @@ function MatchModal({ closeModal }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const finalPlayTo = playTo === 'custom' ? customPlayTo : playTo;
+    // Resolve play-to as a number
+    const finalPlayTo = Number(playTo === 'custom' ? customPlayTo : playTo);
+    if (!Number.isFinite(finalPlayTo) || finalPlayTo < 1 || finalPlayTo > 99) {
+      alert('Please enter a valid target score between 1 and 99.');
+      return;
+    }
 
-    const matchData = {
-      playerCount,
+    const names = playerNames.slice(0, playerCount).map(n => n?.trim() ?? '');
+
+    // Persist so refresh / direct nav doesn't lose state
+    const matchSetup = {
+      numPlayers: Number(playerCount),
       playTo: finalPlayTo,
-      players: playerNames.slice(0, playerCount),
+      playerNames: names,
     };
+    try {
+      sessionStorage.setItem('matchSetup', JSON.stringify(matchSetup));
+    } catch (e) {
+      // non-fatal
+      console.warn('Could not persist match setup:', e);
+    }
 
-    // Navigate to match screen with state
-    navigate('/match', {
-      state: {
-        playerNames: playerNames.slice(0, playerCount),
-        numPlayers: playerCount,
-        playTo: finalPlayTo,
-      }
-    });
+    // Debug: see exactly what we send
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug('Starting match with:', matchSetup);
+    }
 
+    navigate('/match', { state: matchSetup });
     closeModal();
   };
-
 
   return (
     <div className="modal show fade d-block" tabIndex="-1">
@@ -48,10 +57,11 @@ function MatchModal({ closeModal }) {
             <h5 className="modal-title">Set Up Your Ladder Match</h5>
             <button type="button" className="btn-close" onClick={closeModal}></button>
           </div>
+
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
 
-              {/* Question 1: Number of Players */}
+              {/* # of Players */}
               <div className="mb-3">
                 <label htmlFor="playerCount" className="form-label"># of Players:</label>
                 <select
@@ -65,7 +75,7 @@ function MatchModal({ closeModal }) {
                 </select>
               </div>
 
-              {/* Question 2: Play To */}
+              {/* Play To */}
               <div className="mb-3">
                 <label htmlFor="playTo" className="form-label">Play To:</label>
                 <select
@@ -97,7 +107,7 @@ function MatchModal({ closeModal }) {
                 </div>
               )}
 
-              {/* Question 3: Player Names */}
+              {/* Player Names */}
               {[...Array(playerCount)].map((_, i) => (
                 <div className="mb-2" key={i}>
                   <label className="form-label">Player {i + 1} Name:</label>

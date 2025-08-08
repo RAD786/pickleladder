@@ -1,9 +1,60 @@
 function MatchupSchedule({ players }) {
-  const isFivePlayer = players.length === 5;
-
   if (!players || players.length < 4) return null;
 
   const getName = (idx) => players[idx] || `P${idx + 1}`;
+  const isFivePlayer = players.length === 5;
+
+  // Canonical schedules (must match MatchScreen4/5)
+  const schedule4 = {
+    home: [
+      [0, 1], // G1: A+B
+      [0, 2], // G2: A+C
+      [0, 3], // G3: A+D
+    ],
+    away: [
+      [2, 3], // G1: C+D
+      [1, 3], // G2: B+D
+      [1, 2], // G3: B+C
+    ],
+  };
+
+  const schedule5 = {
+    sitOut: [4, 3, 0, 1, 2], // E, D, A, B, C
+    home: [
+      [0, 1], // G1: A+B
+      [1, 4], // G2: B+E
+      [3, 4], // G3: D+E
+      [0, 3], // G4: A+D
+      [1, 3], // G5: B+D
+    ],
+    away: [
+      [2, 3], // G1: C+D
+      [0, 2], // G2: A+C
+      [1, 2], // G3: B+C
+      [2, 4], // G4: C+E
+      [0, 4], // G5: A+E
+    ],
+  };
+
+  const Row = ({ g, home, away, sitsOut }) => (
+    <li className="list-group-item d-flex justify-content-between align-items-center">
+      <span>
+        <strong>Game {g + 1}:</strong>{" "}
+        {getName(home[0])} & {getName(home[1])}{" "}
+        <span className="badge bg-home ms-1">Home</span>
+      </span>
+      <span>vs</span>
+      <span>
+        {getName(away[0])} & {getName(away[1])}{" "}
+        <span className="badge bg-away ms-1">Away</span>
+      </span>
+      {typeof sitsOut === "number" && (
+        <span>
+          <em>Sits out:</em> {getName(sitsOut)}
+        </span>
+      )}
+    </li>
+  );
 
   return (
     <div className="mb-4">
@@ -11,43 +62,21 @@ function MatchupSchedule({ players }) {
       <ul className="list-group">
         {isFivePlayer ? (
           <>
-            <li className="list-group-item d-flex justify-content-between">
-              <span><strong>Game 1:</strong> {getName(0)} & {getName(1)} <span className="badge bg-home ms-1">Home</span></span>
-              <span>vs</span>
-              <span>{getName(2)} & {getName(3)} <span className="badge bg-away ms-1">Away</span></span>
-              <span><em>Sits out:</em> {getName(4)}</span>
-            </li>
-            <li className="list-group-item d-flex justify-content-between">
-              <span><strong>Game 2:</strong> {getName(1)} & {getName(4)} <span className="badge bg-home ms-1">Home</span></span>
-              <span>vs</span>
-              <span>{getName(0)} & {getName(2)} <span className="badge bg-away ms-1">Away</span></span>
-              <span><em>Sits out:</em> {getName(3)}</span>
-            </li>
-            <li className="list-group-item d-flex justify-content-between">
-              <span><strong>Game 3:</strong> {getName(3)} & {getName(4)} <span className="badge bg-home ms-1">Home</span></span>
-              <span>vs</span>
-              <span>{getName(1)} & {getName(2)} <span className="badge bg-away ms-1">Away</span></span>
-              <span><em>Sits out:</em> {getName(0)}</span>
-            </li>
-            <li className="list-group-item d-flex justify-content-between">
-              <span><strong>Game 4:</strong> {getName(0)} & {getName(3)} <span className="badge bg-home ms-1">Home</span></span>
-              <span>vs</span>
-              <span>{getName(2)} & {getName(4)} <span className="badge bg-away ms-1">Away</span></span>
-              <span><em>Sits out:</em> {getName(1)}</span>
-            </li>
-            <li className="list-group-item d-flex justify-content-between">
-              <span><strong>Game 5:</strong> {getName(1)} & {getName(3)} <span className="badge bg-home ms-1">Home</span></span>
-              <span>vs</span>
-              <span>{getName(0)} & {getName(4)} <span className="badge bg-away ms-1">Away</span></span>
-              <span><em>Sits out:</em> {getName(2)}</span>
-            </li>
+            {schedule5.home.map((pair, g) => (
+              <Row
+                key={g}
+                g={g}
+                home={pair}
+                away={schedule5.away[g]}
+                sitsOut={schedule5.sitOut[g]}
+              />
+            ))}
           </>
         ) : (
           <>
-            <li className="list-group-item">Game 1: {getName(0)} & {getName(1)} vs {getName(2)} & {getName(3)}</li>
-            <li className="list-group-item">Game 2: {getName(3)} & {getName(1)} vs {getName(2)} & {getName(0)}</li>
-            <li className="list-group-item">Game 3: {getName(0)} & {getName(3)} vs {getName(2)} & {getName(1)}</li>
-            <li className="list-group-item">Game 4: Replay Best</li>
+            {schedule4.home.map((pair, g) => (
+              <Row key={g} g={g} home={pair} away={schedule4.away[g]} />
+            ))}
           </>
         )}
       </ul>

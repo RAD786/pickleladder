@@ -10,14 +10,32 @@ body {
   margin: 0 auto;
 }
 
-/* Input cells inside score table */
+/* Table spacing, borders, and alignment */
+.table th, .table td {
+  border: 2px solid #dee2e6;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Inputs inside score table */
 .table input {
   text-align: center;
   font-weight: bold;
   border: 1px solid #ccc;
 }
 
-/* Highlight winning team cells */
+.table input[type="number"] {
+  width: 70px;
+  margin: auto;
+  text-align: center;
+}
+
+/* Bootstrap overrides for winning/other colors */
 .bg-success {
   background-color: #28a745 !important;
   color: white !important;
@@ -52,46 +70,62 @@ input[disabled] {
   margin-right: 10px;
 }
 
-.table th, .table td {
-  border: 2px solid #dee2e6;
-  vertical-align: middle;
-  text-align: center;
-}
-
-.table input[type="number"] {
-  width: 70px;
-  margin: auto;
-  text-align: center;
-}
-
-.bg-home {
-  background-color: #d4edda !important; /* Light green */
-}
-
-.bg-away {
-  background-color: #fff3cd !important; /* Light yellow */
-}
-
-/* Highlighting for Game 4 Teams (using !important and matching home/away colors) */
+/* Highlighting for Game 4 Teams (optional custom use) */
 .bg-game4-team1 {
-  background-color: #d4edda !important; /* Light green (same as bg-home) */
+  background-color: #d4edda !important; /* Light green */
   font-weight: bold;
 }
 
 .bg-game4-team2 {
-  background-color: #fff3cd !important; /* Light yellow (same as bg-away) */
+  background-color: #fff3cd !important; /* Light yellow */
   font-weight: bold;
 }
 
-.table-responsive {
-  overflow-x: auto;
+/* Home / Away / Out base colors */
+.bg-home { 
+  background-color: rgba(0, 200, 0, 0.15); 
+}  
+
+.bg-away { 
+  background-color: rgba(255, 0, 0, 0.15); 
+}  
+
+.bg-out  { 
+  background-color: rgba(128, 128, 128, 0.15); 
+} 
+
+/* --- FIXES for highlight visibility --- */
+
+/* Default table form-control inputs are transparent so cell color shows */
+.table input.form-control {
+  background-color: transparent;
+  box-shadow: none;
 }
 
-.table td, .table th {
-  font-size: 0.95rem;
+/* Make sure these override .form-control background */
+td.bg-home, input.bg-home { 
+  background-color: rgba(0, 200, 0, 0.15) !important; 
 }
 
-.bg-out {
-  background-color: #dc3545 !important;
-  color: white !important;
+td.bg-away, input.bg-away { 
+  background-color: rgba(255, 0, 0, 0.15) !important; 
+}
+
+td.bg-out, input.bg-out { 
+  background-color: rgba(128, 128, 128, 0.25) !important; 
+  color: #333 !important;
+}
+
+/* Remove border in colored cells so highlight is clear */
+td.bg-home .form-control,
+td.bg-away .form-control,
+td.bg-out  .form-control {
+  border: 0 !important;
+}
+
+/* Style 'OUT' text in out cells */
+td.bg-out input[disabled] {
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: center;
 }

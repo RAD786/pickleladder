@@ -38,30 +38,38 @@ function ScoreTable({
                 </strong>
               )}
             </td>
+
             {scores.map((_, g) => {
-              const cellClass = getCellClass(g, i);
+              const cellClass = getCellClass(g, i); // 'bg-home' | 'bg-away' | 'bg-out' | ''
+              const isOut = cellClass === 'bg-out';
+
               return (
-                <td key={g}>
-                  {cellClass === 'bg-out' ? (
+                <td key={g} className={cellClass}>
+                  {isOut ? (
                     <input
                       type="text"
-                      className="form-control bg-out text-white fw-bold text-center"
+                      className="form-control bg-out text-white fw-bold text-center border-0"
                       value="OUT"
                       disabled
+                      readOnly
                     />
                   ) : (
                     <input
                       type="number"
                       min="0"
                       max="99"
-                      className={`form-control ${cellClass}`}
+                      step="1"
+                      inputMode="numeric"
+                      className={`form-control border-0 ${cellClass}`}
                       value={scores[g][i]}
                       onChange={e => handleScoreChange(g, i, e.target.value)}
+                      onFocus={e => e.target.select()}
                     />
                   )}
                 </td>
               );
             })}
+
             <td>
               <strong>{playerTotals[i]}</strong>
             </td>
